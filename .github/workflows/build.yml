@@ -25,7 +25,6 @@ jobs:
           cabal install \
             alex \
             happy
-          cabal install --lib pandoc-types
           popd
 
       - name: setup-ghc-wasm
@@ -38,6 +37,10 @@ jobs:
 
       - name: checkout
         uses: actions/checkout@v4
+
+      # - name: build-filter
+      #   run: |
+      #     ghc -package-env=default --make filters/test.hs
 
       - name: checkout
         uses: actions/checkout@v4
@@ -72,6 +75,8 @@ jobs:
           mkdir dist
           wasm-opt --low-memory-unused --converge --gufa --flatten --rereloop -Oz $(find pandoc -type f -name pandoc.wasm) -o dist/pandoc.wasm
           cp frontend/*.html frontend/*.js dist
+          # cp test dist
+          ls -la dist
 
       - name: test
         run: |

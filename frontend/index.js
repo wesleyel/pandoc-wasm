@@ -6,14 +6,14 @@ import {
   PreopenDirectory,
 } from "https://cdn.jsdelivr.net/npm/@bjorn3/browser_wasi_shim@0.3.0/dist/index.js";
 
-const lua_filter_convert_strong=`import Text.Pandoc.JSON
+const lua_filter_convert_strong = `import Text.Pandoc.JSON
 
 main :: IO ()
 main = toJSONFilter behead
 
 behead :: Block -> Block
 behead (Header n _ xs) | n >= 2 = Para [Emph xs]
-behead x = x`
+behead x = x`;
 
 const args = ["pandoc.wasm", "+RTS", "-H64m", "-RTS"];
 const env = [];
@@ -27,7 +27,7 @@ const fds = [
   new PreopenDirectory("/", [
     ["in", in_file],
     ["out", out_file],
-    ["my-filter", filter_file],
+    ["test", filter_file],
   ]),
 ];
 const options = { debug: false };
@@ -64,14 +64,14 @@ memory_data_view().setUint32(argv_ptr, argv, true);
 
 instance.exports.hs_init_with_rtsopts(argc_ptr, argv_ptr);
 
-export function pandoc(args_str, in_str) {
+export async function pandoc(args_str, in_str) {
   const args_ptr = instance.exports.malloc(args_str.length);
   new TextEncoder().encodeInto(
     args_str,
     new Uint8Array(instance.exports.memory.buffer, args_ptr, args_str.length)
   );
   in_file.data = new TextEncoder().encode(in_str);
-  filter_file.data = new TextEncoder().encode(lua_filter_convert_strong);
+  filter_file.data = await fetch("./test").then((res) => res.arrayBuffer());
   instance.exports.wasm_main(args_ptr, args_str.length);
   return new TextDecoder("utf-8", { fatal: true }).decode(out_file.data);
 }

@@ -68,7 +68,7 @@
       ></textarea>
     </div>
     <div id="arguments-container">
-      <input type="text" id="arguments" value="-f markdown -t rst --filter my-filter" />
+      <input type="text" id="arguments" value="-f markdown -t rst --filter my-filter.hs" />
     </div>
     <script type="module">
       import { pandoc } from "./index.js";
@@ -80,7 +80,7 @@
         const inputText = document.getElementById("input").value;
         const argumentsText = document.getElementById("arguments").value;
         try {
-          const output = pandoc(argumentsText, inputText);
+          const output = await pandoc(argumentsText, inputText);
           document.getElementById("output").value = output;
         } catch (err) {
           document.getElementById("output").value = `Error: ${err.message}`;
