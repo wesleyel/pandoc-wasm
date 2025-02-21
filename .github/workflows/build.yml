@@ -25,6 +25,7 @@ jobs:
           cabal install \
             alex \
             happy
+          cabal install --lib pandoc-types
           popd
 
       - name: setup-ghc-wasm

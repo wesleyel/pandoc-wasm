@@ -6,8 +6,18 @@ import {
   PreopenDirectory,
 } from "https://cdn.jsdelivr.net/npm/@bjorn3/browser_wasi_shim@0.3.0/dist/index.js";
 
+const lua_filter_convert_strong=`import Text.Pandoc.JSON
+
+main :: IO ()
+main = toJSONFilter behead
+
+behead :: Block -> Block
+behead (Header n _ xs) | n >= 2 = Para [Emph xs]
+behead x = x`
+
 const args = ["pandoc.wasm", "+RTS", "-H64m", "-RTS"];
 const env = [];
+const filter_file = new File(new Uint8Array(), { readonly: true });
 const in_file = new File(new Uint8Array(), { readonly: true });
 const out_file = new File(new Uint8Array(), { readonly: false });
 const fds = [
@@ -17,6 +27,7 @@ const fds = [
   new PreopenDirectory("/", [
     ["in", in_file],
     ["out", out_file],
+    ["my-filter", filter_file],
   ]),
 ];
 const options = { debug: false };
@@ -60,6 +71,7 @@ export function pandoc(args_str, in_str) {
     new Uint8Array(instance.exports.memory.buffer, args_ptr, args_str.length)
   );
   in_file.data = new TextEncoder().encode(in_str);
+  filter_file.data = new TextEncoder().encode(lua_filter_convert_strong);
   instance.exports.wasm_main(args_ptr, args_str.length);
   return new TextDecoder("utf-8", { fatal: true }).decode(out_file.data);
 }
